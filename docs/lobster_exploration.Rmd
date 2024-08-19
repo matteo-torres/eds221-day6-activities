@@ -1,0 +1,104 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+library(tidyverse)
+library(here)
+library(janitor)
+```
+
+```{r}
+lobster_abundance <- read_csv(here("data", "Lobster_Abundance_All_Years_20210412.csv"), na = "-99999")
+```
+
+```{r}
+lobster_abundance <- clean_names(lobster_abundance) %>%
+  uncount(count)
+```
+
+```{r}
+site_year_lobster <- lobster_abundance %>%
+  group_by(site, year) %>%
+  summarize(count = n(), mean_carapace= mean(size_mm, na.rm = TRUE))
+```
+
+```{r}
+total_lobsters <- ggplot(data = site_year_lobster, aes(x = year, y = count, color= count)) +
+  geom_point(show.legend = FALSE) +
+  scale_color_gradient(low = "black", high = "green") +
+  theme_classic() +
+  labs(x = "Year", y = "Total Number of Lobsters")
+```
+
+```{r}
+lobsters_2020 <- lobster_abundance %>%
+  filter(year == "2020") %>%
+  mutate(legal = case_when(size_mm <= 79.76 ~ "yes", size_mm > 79.76 ~ "no")) %>%
+  group_by(site) %>%
+  count(legal)
+```
+
+```{r}
+lobster_size <- ggplot(lobsters_2020, aes(x = site, y = n, fill = legal)) + geom_col(position = "fill") + theme_classic() + labs(title = "Lobster Size", x = "Site", y = "Proportion of Lobsters")
+```
+
+```{r}
+sites <- lobster_abundance %>%
+  subset(site == c("IVEE", "CARP", "NAPL"))
+```
+
+```{r}
+august <- lobster_abundance %>%
+  filter(month == 8)
+```
+
+```{r}
+aque_70 <- lobster_abundance %>%
+  filter(site == "AQUE" | size_mm > 70)
+```
+
+```{r}
+minus_napl <- lobster_abundance %>%
+   subset(site == c("IVEE", "CARP", "AQUE", "MOHK"))
+```
+
+```{r}
+mean_sd <- lobster_abundance %>%
+  group_by(site) %>%
+  summarize(mean = mean(size_mm, na.rm = TRUE), sd = sd(size_mm, na.rm = TRUE))
+```
+
+```{r}
+max <- lobster_abundance %>%
+  group_by(site, month) %>%
+  summarize(max = max(size_mm, na.rm = TRUE))
+```
+
+```{r}
+size_cm <- lobster_abundance %>%
+  mutate(size_cm = size_mm * 0.1)
+```
+
+```{r}
+lowercase <- lobster_abundance %>%
+  mutate(site = tolower(site))
+```
+
+```{r}
+chr <- lobster_abundance %>%
+  mutate(chr_area = as.character(area))
+```
+
+```{r}
+small <- lobster_abundance %>%
+  mutate(size_bin = case_when(size_mm <= 70 ~ "small", size_mm > 70 ~ "large"))
+```
+
+```{r}
+designation <- lobster_abundance %>%
+  mutate(designation = case_when(site %in% c("IVEE", "NAPL") ~ "MPA", .default = "not MPA"))
+```
+
